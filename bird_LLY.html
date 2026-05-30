@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>雀鳥智能識別及動畫生成測試</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Microsoft JhengHei", sans-serif; background-color: #f5f7fa; padding: 40px; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        h2 { text-align: center; color: #2c3e50; }
+        .upload-area { border: 2px dashed #cbd5e1; padding: 30px; text-align: center; border-radius: 8px; cursor: pointer; background: #f8fafc; transition: all 0.3s; }
+        .upload-area:hover { border-color: #3b82f6; background: #eff6ff; }
+        #loading { display: none; text-align: center; margin: 20px 0; color: #3b82f6; font-weight: bold; }
+        #results { display: none; margin-top: 30px; }
+        .info-box { background: #f1f5f9; padding: 20px; border-left: 5px solid #10b981; border-radius: 4px; white-space: pre-wrap; line-height: 1.6; margin-bottom: 20px; }
+        .animated-img { max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: block; margin: 0 auto; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🦅 雀鳥特徵識別系統</h2>
+    <p style="text-align: center; color: #64748b;">容易操作：上載一張雀鳥相片，系統就會全自動分析佢嘅特徵，並生成對應嘅動漫風格圖像。</p>
+    
+    <!-- 上載區域 -->
+    <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+        <p>真實相片放呢度：點擊選擇或拖曳雀鳥相片到此處</p>
+        <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="startApiTest(this)">
+    </div>
+
+    <!-- 載入狀態 -->
+    <div id="loading">⏳ 正在上載相片、分析雀鳥特徵並繪製動畫，請稍候...</div>
+
+    <!-- 結果展示 -->
+	<div id="results" style="display: none; margin-top: 30px;">
+		<h3>📝 雀鳥特徵同品種介紹</h3>
+		<div id="introBox" class="info-box"></div>
+
+		<h3>🎨 動漫風格生成圖效果</h3>
+		<!-- Separate loading indicator just for the picture -->
+		<div id="imgLoading" style="color: #3b82f6; font-weight: bold; margin: 10px 0;">⏳ 正在繪製及載入動漫相片，請稍候...</div>
+		<img id="animatedBox" class="animated-img" src="" alt="動漫雀鳥效果圖" style="display: none;">
+	</div>
+</div>
+
+
+
+</body><script>
+// 使用雲端官方國際版 API 網址
+const FASTGPT_BASE_URL = "https://fastgpt.io"; 
+const FASTGPT_API_KEY = "Bearer fastgpt-ypOlcMNfKFccLi0MNTZZY3pSfsDARNLtE7FoyuPz1xUQ6NShOHBt2uamvywASFmC"; 
+
+async function startApiTest(input) {
+    // 檢查是否有選取檔案
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0]; // 修正陣列選取，精確抓取第一張相片
+
+    // 變更網頁 UI 狀態
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('loading').innerHTML = "⏳ 正在上載相片並分析雀鳥特徵...";
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('imgLoading').style.display = 'block';
+    document.getElementById('animatedBox').style.display = 'none';
+
+    try {
+        // --- 步驟 1：建立上載的資料表單 ---
+        const formData = new FormData();
+        formData.append('file', file);
+
+        // 簡化網址拼接，完全移除可能導致語法錯誤的嵌套 $ 符號
+        const targetUploadUrl = FASTGPT_BASE_URL + "/core/chat/upload";
+        const uploadUrl = "https://allorigins.win" + encodeURIComponent(targetUploadUrl);
+        
+        const uploadResponse = await fetch(uploadUrl, {
+            method: 'POST',
+            headers: { 'Authorization': FASTGPT_API_KEY },
+            body: formData
+        });
+        
+        if (!uploadResponse.ok) throw new Error('相片上載失敗，請確認 API Key 有無打錯。');
+        const uploadData = await uploadResponse.json();
+        const uploadedImageUrl = uploadData.url; 
+
+        // --- 步驟 2：觸發 FastGPT 工作流 ---
+        document.getElementById('loading').innerHTML = "⏳ 正在生成雀鳥特徵介紹...";
+        
+        const targetChatUrl = FASTGPT_BASE_URL + "/v1/chat/completions";
+        const chatUrl = "https://allorigins.win" + encodeURIComponent(targetChatUrl);
+        
+        const chatResponse = await fetch(chatUrl, {
+            method: 'POST',
+            headers: { 
+                'Authorization': FASTGPT_API_KEY,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                chatId: "test_bird_session_" + Date.now(),
+                stream: false,
+                detail: true, 
+                messages: [
+                    {
+                        role: "user",
+                        content: [
+                            { type: "text", text: "請幫我識別相片入面嘅雀鳥。請用繁體中文詳細列出佢嘅中文名、生活習性同外形特徵。同時請觸發繪圖節點，將佢轉換並生成一張動漫風格嘅相片。" },
+                            { type: "image_url", image_url: { url: uploadedImageUrl } }
+                        ]
+                    }
+                ]
+            })
+        });
+
+        if (!chatResponse.ok) throw new Error('FastGPT 工作流執行失敗，請檢查後台模型或畫布設定。');
+        const chatData = await chatResponse.json();
+        
+        // --- 步驟 3：即時喺網頁畫面上顯示文字介紹 ---
+        const textIntroduction = chatData.choices[0].message.content; 
+        document.getElementById('introBox').innerText = textIntroduction;
+        
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('results').style.display = 'block';
+
+        // --- 步驟 4：非同步載入動漫圖片 ---
+        const animatedPhotoUrl = chatData.responseData ? chatData.responseData.animated_image_url : null;
+
+        if (animatedPhotoUrl) {
+            const imgElement = document.getElementById('animatedBox');
+            imgElement.src = animatedPhotoUrl;
+            
+            imgElement.onload = function() {
+                document.getElementById('imgLoading').style.display = 'none';
+                imgElement.style.display = 'block';
+            };
+        } else {
+            document.getElementById('imgLoading').innerHTML = "<span style='color: orange;'>⚠️ 文字已生成！但後台回傳資料缺少 'animated_image_url'，請檢查 HTTP 繪圖節點。</span>";
+        }
+
+    } catch (error) {
+        console.error(error);
+        document.getElementById('loading').innerHTML = `<span style="color: red;">❌ 測試出錯: ${error.message}</span>`;
+    }
+}
+</script>
+
+</html>
