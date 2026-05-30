@@ -85,7 +85,7 @@ async function startApiTest(input) {
         document.getElementById('loading').innerHTML = "⏳ 正在生成雀鳥特徵介紹...";
         
         const targetChatUrl = FASTGPT_BASE_URL + "/v1/chat/completions";
-        const chatUrl = "https://allorigins.win" + encodeURIComponent(targetChatUrl);
+        const chatUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(targetChatUrl);
         
         const chatResponse = await fetch(chatUrl, {
             method: 'POST',
