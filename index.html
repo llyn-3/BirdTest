@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hong Kong Bird Dex</title>
+    <style>
+        /* --- CSS Styling --- */
+        :root {
+            --primary-bg: linear-gradient(135deg, #74ebd5 0%, #9face6 100%);
+            --error-bg: #ff4757;
+            --log-bg: #1e272e;
+            --log-text: #0be881;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background: var(--primary-bg);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        /* Custom Error Message Banner */
+        #error-message {
+            display: none;
+            background-color: var(--error-bg);
+            color: white;
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Layout Container */
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .column {
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .upload-btn {
+            background-color: #3742fa;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .upload-btn:hover { background-color: #5352ed; }
+        input[type="file"] { display: none; } /* Hidden, triggered by button */
+
+        /* Glassmorphism Pokemon Card */
+        .pokemon-card {
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            position: relative;
+            overflow: hidden;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s;
+        }
+
+        /* Holographic Shine Effect */
+        .pokemon-card::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%; right: -50%; bottom: -50%;
+            background: linear-gradient(135deg, rgba(255,255,255,0) 30%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0) 70%);
+            transform: rotate(25deg);
+            pointer-events: none;
+            animation: holoShine 6s infinite linear;
+        }
+
+        @keyframes holoShine {
+            0% { transform: translateX(-100%) rotate(25deg); }
+            100% { transform: translateX(100%) rotate(25deg); }
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid rgba(0,0,0,0.1);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .card-name { font-size: 1.8rem; font-weight: bold; }
+        .card-hp { font-size: 1.4rem; font-weight: bold; color: #c23616; }
+        
+        .card-image-container {
+            background: rgba(0,0,0,0.1);
+            height: 250px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            border: 4px solid rgba(255,255,255,0.5);
+            overflow: hidden;
+        }
+
+        .card-image-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: cover;
+            display: none; /* Hidden until loaded */
+        }
+
+        .card-stats {
+            background: rgba(255,255,255,0.5);
+            padding: 15px;
+            border-radius: 12px;
+            flex-grow: 1;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .card-intro {
+            margin-top: 15px;
+            font-style: italic;
+            font-size: 0.95rem;
+            color: #2f3640;
+            text-align: center;
+        }
+
+        .empty-placeholder {
+            text-align: center;
+            color: rgba(0,0,0,0.5);
+            margin: auto;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        #active-card-content { display: none; } /* Hidden initially */
+
+        /* Dark Mode Scanning Log */
+        .scanning-log {
+            background-color: var(--log-bg);
+            color: var(--log-text);
+            padding: 20px;
+            border-radius: 12px;
+            font-family: 'Courier New', Courier, monospace;
+            height: 100%;
+            min-height: 400px;
+            overflow-y: auto;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+            border: 2px solid #2f3640;
+        }
+
+        .log-entry { margin-bottom: 10px; line-height: 1.4; }
+        .log-entry.error { color: #ff4757; }
+        .log-entry.success { color: #1e90ff; }
+        .log-entry.warning { color: #ffa502; }
+    </style>
+</head>
+<body>
+
+    <h1>🐦 Hong Kong Bird Dex</h1>
+
+    <div id="error-message"></div>
+
+    <div class="container">
+        <!-- LEFT COLUMN -->
+        <div class="column">
+            <div class="upload-section">
+                <h3>Discover a Bird!</h3>
+                <p>Upload a photo of a bird you found in Hong Kong.</p>
+                <button class="upload-btn" onclick="document.getElementById('imageInput').click()">
+                    📸 Upload Image
+                </button>
+                <input type="file" id="imageInput" accept="image/*">
+            </div>
+
+            <div class="pokemon-card">
+                <div class="empty-placeholder" id="card-placeholder">
+                    Awaiting Bird Data... <br> 🥚
+                </div>
+
+                <div id="active-card-content">
+                    <div class="card-header">
+                        <div class="card-name" id="ui-name">Name</div>
+                        <div class="card-hp" id="ui-hp">HP</div>
+                    </div>
+                    <div class="card-image-container">
+                        <img id="ui-image" src="" alt="Scanned Bird">
+                    </div>
+                    <div class="card-stats">
+                        <div class="stat-row">
+                            <strong>Type:</strong> <span id="ui-type">Type</span>
+                        </div>
+                        <hr style="border-top: 1px solid rgba(0,0,0,0.1)">
+                        <div class="stat-row">
+                            <strong>Atk 1:</strong> <span id="ui-atk1">Attack 1</span>
+                        </div>
+                        <div class="stat-row">
+                            <strong>Atk 2:</strong> <span id="ui-atk2">Attack 2</span>
+                        </div>
+                    </div>
+                    <div class="card-intro" id="ui-intro">Intro text...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="column">
+            <div class="scanning-log" id="log-container">
+                <div class="log-entry">> POKEDEX SYSTEM INITIALIZED...</div>
+                <div class="log-entry">> WAITING FOR VISUAL INPUT...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- --- JavaScript Logic --- -->
+    <script>
+        // --- 1. LOCAL DATABASE ---
+        const birdDatabase = [
+            {
+                name: "Black-faced spoonbill", hp: "120 HP", type: "Water / Flying",
+                attack1: "Spoon Sweep (30)", attack2: "Tidal Wave (80)",
+                intro: "An endangered species known for its distinct spoon-shaped beak. Often found in Deep Bay wetlands."
+            },
+            {
+                name: "Chestnut bulbul", hp: "70 HP", type: "Normal / Flying",
+                attack1: "Peck (20)", attack2: "Chestnut Flurry (50)",
+                intro: "A small bird with warm chestnut plumage, commonly heard singing in Hong Kong's forests."
+            },
+            {
+                name: "Red-whiskered bulbul", hp: "80 HP", type: "Normal / Flying",
+                attack1: "Crest Strike (30)", attack2: "Whiskered Wind (60)",
+                intro: "Recognizable by its tall black crest and red cheek patches. Very common in parks and gardens."
+            },
+            {
+                name: "Mountain Tailorbird", hp: "50 HP", type: "Grass / Flying",
+                attack1: "Leaf Stitch (10)", attack2: "Needle Beak (40)",
+                intro: "Famous for 'sewing' leaves together to make its nest. Tiny, active, and highly vocal."
+            },
+            {
+                name: "Greater Necklaced Laughingthrush", hp: "90 HP", type: "Dark / Flying",
+                attack1: "Chorus Call (40)", attack2: "Necklace Glare (70)",
+                intro: "A social bird with a distinctive black 'necklace' marking. Travels in noisy flocks."
+            },
+            {
+                name: "Eurasian Tree Sparrow", hp: "60 HP", type: "Normal / Flying",
+                attack1: "Quick Hop (20)", attack2: "Swarm Tactic (50)",
+                intro: "The most common urban bird in Hong Kong. Small, brown, and highly adaptable."
+            },
+            {
+                name: "Spotted Dove", hp: "100 HP", type: "Normal / Flying",
+                attack1: "Cooing Lullaby (Sleep)", attack2: "Wing Slap (60)",
+                intro: "Named for the prominent spotted patch on its neck. Often seen foraging on the ground."
+            },
+            {
+                name: "Swinhoe's White-eye", hp: "50 HP", type: "Grass / Flying",
+                attack1: "Nectar Sip (Heal 20)", attack2: "Acrobatics (40)",
+                intro: "A tiny, yellow-green bird with a distinct white ring around its eye. Loves flowering trees."
+            },
+            {
+                name: "Black Kite", hp: "150 HP", type: "Dark / Flying",
+                attack1: "Thermal Glide (Evade)", attack2: "Talon Dive (100)",
+                intro: "Hong Kong's most familiar bird of prey. Often seen soaring in circles over Victoria Harbour."
+            },
+            {
+                name: "Asian Koel", hp: "80 HP", type: "Dark / Flying",
+                attack1: "Deafening Call (Confusion)", attack2: "Shadow Stealth (50)",
+                intro: "Famous for its loud 'ko-el' call that wakes people up in spring. Males are glossy black."
+            }
+        ];
+
+        // --- 2. CONFIGURATION ---
+        // TEACHER: Replace these two variables with your actual FastGPT API details!
+        const FASTGPT_API_URL = "https://cloud.fastgpt.io/api"; 
+        const FASTGPT_API_KEY = "fastgpt-hGXLnvy5PnfkRjXw9KpcsZllPIX5IR3vj76LrCF7NpOMLiqYEdbM11m";
+
+        // Create the string of names for the prompt automatically
+        const validBirdNames = birdDatabase.map(b => b.name).join(", ");
+
+        // --- 3. UI ELEMENTS & HELPER FUNCTIONS ---
+        const logContainer = document.getElementById('log-container');
+        const errorMessage = document.getElementById('error-message');
+
+        function addLog(text, type = 'normal') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const time = new Date().toLocaleTimeString();
+            entry.textContent = `[${time}] > ${text}`;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight; // Auto-scroll to bottom
+        }
+
+        function showCustomError(msg) {
+            errorMessage.textContent = msg;
+            errorMessage.style.display = 'block';
+            // Hide error after 6 seconds
+            setTimeout(() => { errorMessage.style.display = 'none'; }, 6000);
+        }
+
+        // --- 4. MAIN WORKFLOW ---
+        document.getElementById('imageInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            addLog("Image detected. Initializing scanner...", "normal");
+            
+            // Convert image to Base64
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = function(e) {
+                const base64Image = e.target.result;
+                
+                // Show image temporarily in the card (even before AI responds)
+                document.getElementById('ui-image').src = base64Image;
+                document.getElementById('ui-image').style.display = 'block';
+
+                addLog("Image converted. Connecting to FastGPT Vision API...", "normal");
+                callFastGPT(base64Image);
+            };
+            reader.onerror = function() {
+                showCustomError("Could not read the uploaded file.");
+                addLog("ERROR: File conversion failed.", "error");
+            }
+        });
+
+        async function callFastGPT(base64Image) {
+            if (FASTGPT_API_KEY === "fastgpt-hGXLnvy5PnfkRjXw9KpcsZllPIX5IR3vj76LrCF7NpOMLiqYEdbM11m") {
+                showCustomError("Developer Error: FastGPT API key is missing. Please add it to the code.");
+                addLog("API ERROR: Missing credentials.", "error");
+                return;
+            }
+
+            const prompt = `Identify the bird in this image. It must be one of these 10: [${validBirdNames}]. Return ONLY the exact name of the bird, nothing else.`;
+
+            try {
+                const response = await fetch(FASTGPT_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${FASTGPT_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: "gpt-4-vision-preview", // Note: Ensure this matches the vision model name configured in your FastGPT
+                        messages: [
+                            {
+                                role: "user",
+                                content: [
+                                    { type: "text", text: prompt },
+                                    { type: "image_url", image_url: { url: base64Image } }
+                                ]
+                            }
+                        ],
+                        temperature: 0.1 // Low temperature prevents AI from hallucinating extra words
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // FastGPT usually follows the standard OpenAI response format
+                const aiResponseString = data.choices[0].message.content.trim();
+                
+                addLog(`Transmission received! AI says: "${aiResponseString}"`, "success");
+                
+                matchEngine(aiResponseString);
+
+            } catch (error) {
+                console.error("API Error:", error);
+                showCustomError("Failed to connect to the AI. Check your internet or API settings.");
+                addLog(`NETWORK ERROR: ${error.message}`, "error");
+            }
+        }
+
+        // --- 5. MATCH ENGINE ---
+        function matchEngine(identifiedName) {
+            addLog("Cross-referencing with local database...", "normal");
+
+            // Clean up the string just in case the AI added punctuation (e.g., "Black Kite.")
+            const cleanName = identifiedName.replace(/[.,'"]/g, "").trim().toLowerCase();
+
+            // Search the database
+            const match = birdDatabase.find(bird => bird.name.toLowerCase() === cleanName);
+
+            if (match) {
+                addLog(`Match Confirmed! Loading data for ${match.name}...`, "success");
+                updatePokemonCard(match);
+            } else {
+                showCustomError(`Hmm, the scanner identified "${identifiedName}", but that's not one of our 10 target birds! Try another photo.`);
+                addLog(`MATCH FAILED: "${identifiedName}" not found in local DB.`, "warning");
+                
+                // Reset UI to hide the card details if it failed
+                document.getElementById('card-placeholder').style.display = 'block';
+                document.getElementById('active-card-content').style.display = 'none';
+            }
+        }
+
+        function updatePokemonCard(birdData) {
+            // Hide the placeholder text
+            document.getElementById('card-placeholder').style.display = 'none';
+            // Show the actual card data
+            document.getElementById('active-card-content').style.display = 'block';
+
+            // Populate the UI
+            document.getElementById('ui-name').textContent = birdData.name;
+            document.getElementById('ui-hp').textContent = birdData.hp;
+            document.getElementById('ui-type').textContent = birdData.type;
+            document.getElementById('ui-atk1').textContent = birdData.attack1;
+            document.getElementById('ui-atk2').textContent = birdData.attack2;
+            document.getElementById('ui-intro').textContent = birdData.intro;
+            
+            // Add a fun bounce animation to the card
+            const card = document.querySelector('.pokemon-card');
+            card.style.transform = 'scale(1.05)';
+            setTimeout(() => { card.style.transform = 'scale(1)'; }, 300);
+        }
+
+    </script>
+</body>
+</html>
