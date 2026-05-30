@@ -121,109 +121,105 @@
         // --- 1. LOCAL DATABASE (Bilingual English / Traditional Chinese matches) ---
         const birdDatabase = [
             // ... (The database remains the same)
-             {
-                name: "Black-faced spoonbill",
-                chineseName: "黑臉琵鷺",
-                hp: "120 HP",
-                type: "Water / Flying (水 / 飛行)",
-                attack1: "觸覺掃食 (Touch Sweep)",
-                attack2: "米埔越冬 (Winter Migrant Storm)",
-                intro: "An endangered species known for its distinct spoon-shaped beak. Often found in Deep Bay wetlands. 每年冬季從北方遷徙，準時造訪香港米埔濕地。",
-                cardImage: "CardBlack.png"
-            },
-            {
-                name: "Spotted Dove",
-                chineseName: "珠頸斑鳩",
-                hp: "100 HP",
-                type: "Normal / Flying (一般 / 飛行)",
-                attack1: "斑鳩咕咕 (Coo Attack)",
-                attack2: "都市珠頸 (Urban Forage 60)",
-                intro: "Named for the prominent spotted patch on its neck. Extremely common urban resident in Hong Kong gardens. 頸部兩側有顯著的白色斑點，適應都市生活。",
-                cardImage: "Gemini_Generated_Image_p30l0yp30l0yp30l.png"
-            },
-            {
-                name: "Eurasian Tree Sparrow",
-                chineseName: "樹麻雀",
-                hp: "60 HP",
-                type: "Normal / Flying (一般 / 飛行)",
-                attack1: "成群結隊 (Flock Call 20)",
-                attack2: "都市覓食 (Urban Forage 50)",
-                intro: "The most common urban bird in Hong Kong. Small, brown, highly adaptable, nesting on pipes and buildings. 喜歡群體活動，適應力極強。",
-                cardImage: "Gemini_Generated_Image_6jtnne6jtnne6jtn.png"
-            },
-            {
-                name: "Red-whiskered bulbul",
-                chineseName: "紅耳鵯",
-                hp: "80 HP",
-                type: "Normal / Flying (一般 / 飛行)",
-                attack1: "高唱囉囉高 (Loud Crest Sing)",
-                attack2: "公園高帽 (Park Glade 60)",
-                intro: "Recognizable by its tall black crest and bright red cheek patches. Extremely vocal and commonly found in HK city parks. 頭頂黑色高聳羽冠，眼睛下方有顯著紅斑。",
-                cardImage: "Gemini_Generated_Image_p4q3g0p4q3g0p4q3.png"
-            },
-            {
-                name: "Peregrine Falcon",
-                chineseName: "遊隼",
-                hp: "150 HP",
-                type: "Steel / Flying (鋼 / 飛行)",
-                attack1: "時速突襲 (Speed Dive 120)",
-                attack2: "獵鷹利爪 (Razor Talons 100)",
-                intro: "A majestic and powerful bird of prey in Hong Kong. One of the fastest creatures on Earth, diving at speeds over 300 km/h! 在空中全速俯衝時速度驚人，極致的空中掠食者。",
-                cardImage: "Gemini_Generated_Image_bef3irbef3irbef3.png"
-            },
-            {
-                name: "Chestnut bulbul",
-                chineseName: "栗背短腳鵯",
-                hp: "70 HP",
-                type: "Normal / Flying (一般 / 飛行)",
-                attack1: "Peck / 啄擊 (20)",
-                attack2: "Chestnut Flurry / 栗色亂舞 (50)",
-                intro: "A small bird with warm chestnut plumage, commonly heard singing high in Hong Kong's native forests."
-            },
-            {
-                name: "Mountain Tailorbird",
-                chineseName: "栗頭縫葉鶯",
-                hp: "50 HP",
-                type: "Grass / Flying (草 / 飛行)",
-                attack1: "Leaf Stitch / 縫葉術 (10)",
-                attack2: "Needle Beak / 針嘴突刺 (40)",
-                intro: "Famous for 'sewing' large leaves together using spiderwebs to build its nest. Tiny, energetic, and active."
-            },
-            {
-                name: "Greater Necklaced Laughingthrush",
-                chineseName: "黑領噪鶥",
-                hp: "90 HP",
-                type: "Dark / Flying (惡 / 飛行)",
-                attack1: "Chorus Call / 合唱召喚 (40)",
-                attack2: "Necklace Glare / 頸環瞪視 (70)",
-                intro: "A loud social bird with a distinctive black 'necklace' marking. Often travels in noisy forest floor flocks."
-            },
-            {
-                name: "Swinhoe's White-eye",
-                chineseName: "暗綠繡眼鳥",
-                hp: "50 HP",
-                type: "Grass / Flying (草 / 飛行)",
-                attack1: "Nectar Sip / 花蜜吸食 (Heal 20)",
-                attack2: "Acrobatics / 特技俯衝 (40)",
-                intro: "A tiny, yellow-green bird with a distinct white ring around its eye. Loves flowering trees and sweet nectar."
-            },
-            {
-                name: "Black Kite",
-                chineseName: "麻鷹",
-                hp: "140 HP",
-                type: "Dark / Flying (惡 / 飛行)",
-                attack1: "Thermal Glide / 熱氣流滑翔",
-                attack2: "Talon Dive / 飛爪奇襲 (100)",
-                intro: "Hong Kong's most famous bird of prey. Easily spotted soaring in beautiful circles above Victoria Harbour."
-            },
-            {
-                name: "Asian Koel",
-                chineseName: "噪鵑",
-                hp: "80 HP",
-                type: "Dark / Flying (惡 / 飛行)",
-                attack1: "Deafening Call / 刺耳啼鳴 (Confusion)",
-                attack2: "Shadow Stealth / 陰影潛伏 (50)",
-                intro: "Famous for its incredibly loud 'ko-el' mating call that echoes throughout Hong Kong neighborhoods in spring."
+           {
+               name: "Eurasian Tree Sparrow",
+               chineseName: "麻雀",
+               hp: "50 HP",
+               type: "Normal / Flying (一般 / 飛行)",
+               attack1: "Flock Forage / 集群覓食 (20)",
+               attack2: "Cheer Chirp / 歡樂鳴叫 (30)",
+               "intro": "麻雀是都市中最常見的小型鳥類，適應力極強。牠們的頭頂呈經典的栗褐色，臉頰帶有顯眼的黑色斑點。這些小精靈生性活潑且極具社會性，常常成群結隊地在街道、廣場與市區角落蹦跳覓食。牠們不懼怕人類，憑藉著高超的適應能力，成功將鋼筋水泥的都市變成了自己的遊樂場，是日常生活中最親切的飛羽鄰居。",
+               cardImage: "CardPasser.png"
+           },
+           {
+               name: "Red-whiskered Bulbul",
+               chineseName: "紅耳鵯",
+               hp: "60 HP",
+               type: "Normal / Flying (一般 / 飛行)",
+               attack1: "Crest Flaunt / 炫耀羽冠 (20)",
+               attack2: "Echoing Call / 響亮啼鳴 (50)",
+               "intro": "紅耳鵯是公園與綠地中的時尚明星。牠們最引人注目的特徵，便是頭頂上那高高聳立的黑色羽冠，顯得神氣十足；而臉頰上兩抹鮮紅色的斑塊，更如同化了精緻的彩妝。牠們的性格活潑外向，叫聲極其響亮且富有韻律感。不論是在枝頭上跳躍嬉戲，還是在空中捕捉飛蟲，那獨特的冠羽和高亢的鳴叫聲總能讓人一眼認出。",
+               cardImage: "CardRed.png"
+           },
+           {
+               name: "Light-vented Bulbul",
+               chineseName: "白頭鵯",
+               hp: "60 HP",
+               type: "Grass / Flying (草 / 飛行)",
+               attack1: "Canopy Hide / 樹冠隱蔽 (10)",
+               attack2: "Leaf Flutter / 綠葉撲翼 (40)",
+               "intro": "白頭鵯俗稱「白頭翁」，是個性開朗的林中隱士。牠們最經典的外貌是頭頂至後頸處那一頭純白色的羽毛，宛如慈祥的老翁。牠們的身體則披著清新優雅的橄欖綠色外衣。白頭鵯非常活潑好動，特別喜歡在公園與校園的樹冠層高處活動。牠們鳴聲婉轉多變，總是隱身在茂密的綠葉之間啼唱，為繁華的都市帶來大自然的生機。",
+               cardImage: "s-l1600.png"
+           },
+           {
+               name: "Oriental Magpie-Robin",
+               chineseName: "鵲鴝",
+               hp: "70 HP",
+               type: "Dark / Flying (惡 / 飛行)",
+               attack1: "Dawn Song / 清晨高歌 (30)",
+               attack2: "Shadow Melodics / 暗影悅音 (60)",
+               intro: "鵲鴝在民間俗稱為「四喜」，是出了名的音樂大師。牠們的身體黑白分明，雄鳥擁有鋼秀般的藍黑色羽毛與潔白的腹部，尾羽時常高高翹起。鵲鴝擁有極強的領域觀念，同時也是天生的歌唱家。雄鳥的叫聲極為悅耳、婉轉且富有變化。每當清晨旭日初升之際，牠們總會站在顯眼的枝頭或屋頂上高歌，用優美的歌聲喚醒整座城市。",
+               cardImage: "s-l1600.png"
+           },
+           {
+               name: "Japanese White-eye",
+               chineseName: "暗綠繡眼鳥",
+               hp: "40 HP",
+               type: "Grass / Flying (草 / 飛行)",
+               attack1: "White Ring Flash / 白眼圈閃爍 (20)",
+               attack2: "Thicket Dart / 穿梭樹叢 (30)",
+               intro: "暗綠繡眼鳥俗稱「相思仔」，是體型極其嬌小玲瓏的林間精靈。牠們全身覆蓋著充滿活力的暗綠色羽毛，而最經典的標誌莫過於眼睛周圍那一圈精緻、明顯的純白眼圈，彷彿戴了一副優雅的白框眼鏡。牠們生性敏捷、精力充沛，極其擅長在繁茂的樹叢與花冠之間穿梭尋覓花蜜與昆蟲，成群活動時會發出細碎輕快的呢喃軟語。",
+               cardImage: "s-l1600.png"
+           },
+           {
+               name: "Spotted Dove",
+               chineseName: "珠頸斑鳩",
+               hp: "80 HP",
+               type: "Normal / Flying (一般 / 飛行)",
+               attack1: "Ground Stroll / 地面慢步 (20)",
+               attack2: "Pearl Peck / 珠斑啄擊 (50)",
+               intro: "珠頸斑鳩是都市與郊區隨處可見的中型鳥類。牠們最大的外觀亮點在於頸部兩側，長有一塊交織著黑色與密布白色斑點的區域，宛如佩戴了一串高雅的「珍珠項圈」。牠們性格溫和、步調悠閒，非常喜歡在草地、公園小徑或水泥地面上慢步踱步，專注地低頭尋找植物種子與碎屑，那咕咕作響的低沉叫聲給人一種寧靜感。",
+               cardImage: "CardSpottedDove.png"
+           },
+            {    
+                name: "Black-collared Starling",         
+                chineseName: "黑領椋鳥",         
+                hp: "80 HP",         
+                 type: "Normal / Flying (一般 / 飛行)",         
+                attack1: "Grassland Hunt / 草地獵昆 (40)",         
+                attack2: "Collar Shout / 黑領高呼 (60)",         
+                intro: "黑領椋鳥是體型碩大且存在感十足的鳥類。牠們的頭部呈現乾淨的純白色，而最獨特之處在於頸部圍繞著一圈寬闊、顯眼的黑色項圈，對比強烈。這類鳥類極其喧鬧，叫聲粗獷而宏亮。牠們熱愛開闊的環境，經常成雙成對或小群在公園的草坪、開墾地上昂首闊步，用強壯的喙部翻動泥土與草根，高調地尋找昆蟲與蚯蚓。",
+                cardImage: "s-l1600.png"    
+            },     
+            {         
+                name: "Crested Myna",         
+                chineseName: "八哥",         
+                hp: "70 HP",         
+                type: "Dark / Flying (惡 / 飛行)",         
+                attack1: "Ivory Peck / 象牙白喙 (40)",         
+                attack2: "Crest Raise / 豎冠威嚇 (50)",         
+                intro: "八哥是聰明伶俐且個性十足的黑色飛羽。牠們全身披著漆黑亮麗的羽毛，額頭上長有一撮向前微捲、高高豎起的標誌性羽冠，搭配上象牙白色的強健嘴喙，外型充滿酷勁。當牠們展翅高飛時，雙翼會露出耀眼的白色翼斑。八哥不僅智商極高，更具備驚人的效鳴天賦，能夠維妙維肖地模仿周遭各種複雜的環境聲音與其他鳥鳴。",
+                cardImage: "s-l1600.png"        
+            },     
+            {         
+                name: "Black Kite",         
+                chineseName: "黑鳶",        
+                hp: "120 HP",         
+                type: "Dark / Flying (惡 / 飛行)",         
+                attack1: "Harbor Soar / 港灣盤旋 (50)",         
+                attack2: "Fork-Tail Dive / 剪尾俯衝 (90)",         
+                intro: "黑鳶俗稱「麻鷹」，是天空中最威風凜凜的頂級掠食者，也是著名的大型猛禽。牠們擁有寬大的深褐色翅膀，翱翔時尾羽會呈現出極具辨識度的「魚尾狀」開叉。黑鳶非常擅長利用熱氣流在維多利亞港上空、高樓大廈之間以及郊野山谷高空長時間盤旋。牠們憑藉敏銳的視力俯瞰大地，一旦發現獵物便會展現高超的俯衝技巧。",
+                cardImage: "s-l1600.png"            
+            },     
+            {         
+                name: "Little Egret",         
+                chineseName: "小白鷺",         
+                hp: "80 HP",         
+                type: "Water / Flying (水 / 飛行)",         
+                attack1: "Yellow-Toe Wade / 黃趾涉水 (30)",         
+                attack2: "Stream Strike / 明渠突襲 (60)",         
+                intro: "小白鷺是水畔優雅的白色隱士。牠們全身覆蓋著無暇的純白色羽毛，體態修長而輕盈。其纖細的嘴喙呈現深黑色，而最有趣的特徵是那雙暗色的長腿下，長著一雙鮮黃色的腳趾，彷彿穿了一雙搶眼的芭蕾舞鞋。小白鷺常在沿海泥灘、內陸水塘或城市明渠中現身，牠們會用黃色腳趾攪動水底驚擾魚蝦，隨後以迅雷不及掩耳之勢精準捕食。",
+                cardImage: "s-l1600.png"            
             }
         ];
 
