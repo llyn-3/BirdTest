@@ -69,7 +69,7 @@ async function startApiTest(input) {
 
         // 簡化網址拼接，完全移除可能導致語法錯誤的嵌套 $ 符號
         const targetUploadUrl = FASTGPT_BASE_URL + "/core/chat/upload";
-        const uploadUrl = "https://allorigins.win" + encodeURIComponent(targetUploadUrl);
+        const uploadUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(targetUploadUrl);
         
         const uploadResponse = await fetch(uploadUrl, {
             method: 'POST',
