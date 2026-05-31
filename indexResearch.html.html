@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🕊️ 斑鳩視覺 · 多鳥種 AI 檢測系統</title>
+    <script type="text/javascript" src="https://gc.kes.v2.scr.kaspersky-labs.com/7EA5E9BB-55E1-4C31-9C21-4943DDFED2E4/main.js?attr=XDefuwOFUS7X0buiy6m6e1_rF5KRsyBrdJmIuXxA31M_DCMQeFiQ5Yvau1GINzaeSIrU5bXQhp008GKhxbtxkB8JD7h_bE8TGeMlBWIS5wF61UxNPHx93ybMQokc9fEDxksP1-aU8hcUfiVx7czQbIBh7KkbTMfQU_ss_cFtUUbNKfp6t9S6K8i94rERkqzQAD2M51jAe6IUNLmO5j-vONf1vfgn4LQnYDBCdRS6YYMTsQZoi-o5gLHOkctavfsS8lCdkR9RtPO7EbWYrt5U8wANmnTp_T6aDSgu2UlIasxhooaJNu83liZsWifGvnEEuheQpQCpV2clfNxa1HrDTA" charset="UTF-8"></script><script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2/dist/coco-ssd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #f3f4f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .brand-text { color: #6b46c1; }
+        .brand-bg { background-color: #e9d5ff; color: #6b46c1; font-weight: bold; border-bottom: 3px solid #6b46c1; }
+        .map-bg { background-color: #e5e7eb; background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 20px 20px; }
+        canvas { max-height: 260px; width: 100% !important; }
+        .animate-pulse-slow { animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 0.7; } 70% { transform: scale(1.2); opacity: 0.3; } 100% { transform: scale(1); opacity: 0.7; } }
+        .file-input-label { cursor: pointer; background: #8b5cf6; color: white; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; display: inline-block; transition: 0.2s; }
+        .file-input-label:hover { background: #6d28d9; }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+<header class="bg-white shadow-sm h-16 flex items-center justify-between px-6 shrink-0 z-20">
+    <div class="flex items-center gap-2">
+        <div class="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center text-white font-bold">🕊️</div>
+        <span class="text-xl font-bold brand-text tracking-wide">斑鳩視覺<span class="text-sm font-normal text-gray-500 ml-2">多鳥種 AI 檢測 · 手動輸入 · JSON 導入</span></span>
+    </div>
+    <nav class="flex h-full text-gray-600 text-sm">
+        <a href="#" class="px-4 h-full flex items-center hover:bg-gray-50" data-tab="dashboard">儀表板</a>
+        <a href="#" class="px-4 h-full flex items-center hover:bg-gray-50" data-tab="realtime">實時檢測</a>
+        <a href="#" class="px-4 h-full flex items-center hover:bg-gray-50" data-tab="manual">手動輸入</a>
+        <a href="#" class="px-4 h-full flex items-center hover:bg-gray-50" data-tab="tracking">數據追蹤</a>
+        <a href="#" class="px-4 h-full flex items-center brand-bg" data-tab="recommend">建議生成</a>
+    </nav>
+    <div class="flex items-center gap-4 text-xs text-gray-500">
+        <div class="flex items-center gap-1 border rounded px-2 py-1"><span class="w-2 h-2 rounded-full bg-green-500"></span> 在線</div>
+        <div class="border rounded px-2 py-1">⚙️ CPU: <span id="cpu-load">32</span>%</div>
+        <div class="border rounded px-2 py-1">💾 RAM: <span id="ram-load">48</span>%</div>
+    </div>
+</header>
+
+<div class="flex flex-1 overflow-hidden p-4 gap-4">
+    <!-- 左側快捷面板 -->
+    <aside class="w-64 flex flex-col gap-3 shrink-0">
+        <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200">
+            <h3 class="text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">⚡ 快速控制</h3>
+            <button id="startDetectBtn" class="w-full bg-green-500 hover:bg-green-600 text-white rounded-lg py-2 text-sm font-medium mb-2 transition">▶ 開始攝像頭檢測</button>
+            <button id="stopDetectBtn" class="w-full bg-red-500 hover:bg-red-600 text-white rounded-lg py-2 text-sm font-medium mb-2 transition">■ 停止檢測</button>
+            <button id="pauseDetectBtn" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg py-2 text-sm font-medium transition">⏸ 暫停/恢復</button>
+            <div class="mt-3 text-xs text-gray-500 border-t pt-2">
+                <kbd class="px-1 bg-gray-200 rounded">空格</kbd> 暫停 &nbsp; <kbd class="px-1 bg-gray-200 rounded">Esc</kbd> 停止
+            </div>
+        </div>
+        <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200">
+            <h3 class="text-sm font-bold text-gray-700 mb-2">📊 即時統計</h3>
+            <div class="grid grid-cols-2 gap-2 text-center">
+                <div><div class="text-lg font-bold text-purple-600" id="statTotal">0</div><div class="text-[10px] text-gray-500">累計檢測</div></div>
+                <div><div class="text-lg font-bold text-purple-600" id="statCurrent">0</div><div class="text-[10px] text-gray-500">當前數量</div></div>
+                <div><div class="text-sm font-bold" id="statFps">0 FPS</div><div class="text-[10px] text-gray-500">幀率</div></div>
+                <div><div class="text-sm font-bold" id="statConf">0%</div><div class="text-[10px] text-gray-500">平均信心</div></div>
+            </div>
+        </div>
+        <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200">
+            <h3 class="text-sm font-bold text-gray-700 mb-2">🖼️ 上傳圖片檢測</h3>
+            <input type="file" id="uploadImage" accept="image/jpeg,image/png" class="hidden">
+            <label for="uploadImage" class="file-input-label w-full text-center block"><i class="fas fa-upload"></i> 選擇圖片</label>
+            <div id="uploadPreview" class="mt-2 text-xs text-gray-500"></div>
+        </div>
+    </aside>
+
+    <main class="flex-1 bg-white rounded-xl shadow-sm border border-gray-200 overflow-y-auto relative">
+        <!-- 儀表板 -->
+        <div id="dashboardPanel" class="p-5 block">
+            <h2 class="text-xl font-bold text-gray-800 border-b pb-2 mb-4">📈 綜合分析儀表板</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div class="border rounded-lg p-3 bg-gray-50"><h3 class="font-semibold text-sm mb-2">📉 檢測趨勢 (累計/即時)</h3><canvas id="trendChart"></canvas></div>
+                <div class="border rounded-lg p-3 bg-gray-50"><h3 class="font-semibold text-sm mb-2">🎯 置信度分佈</h3><canvas id="confidenceChart"></canvas></div>
+                <div class="border rounded-lg p-3 bg-gray-50"><h3 class="font-semibold text-sm mb-2">🐦 鳥種識別統計 (前5)</h3><canvas id="speciesChart"></canvas></div>
+                <div class="border rounded-lg p-3 bg-gray-50"><h3 class="font-semibold text-sm mb-2">⏰ 時段檢測趨勢</h3><canvas id="timeChart"></canvas></div>
+            </div>
+            <div class="border rounded-lg overflow-hidden">
+                <div class="bg-gray-100 px-4 py-2 font-semibold text-sm flex justify-between items-center">
+                    <span>📋 檢測紀錄總表 (含詳細鳥種)</span>
+                    <div><button id="exportCsvBtn" class="text-xs bg-purple-500 text-white px-2 py-1 rounded mr-2">匯出 CSV</button><button id="exportJsonBtn" class="text-xs bg-blue-500 text-white px-2 py-1 rounded">匯出 JSON</button></div>
+                </div>
+                <div class="overflow-x-auto max-h-64">
+                    <table class="min-w-full text-sm">
+                        <thead class="bg-gray-50"><tr><th class="p-2 text-left">時間</th><th>數量</th><th>主要鳥種</th><th>累計總數</th><th>平均信心</th><th>操作</th></tr></thead>
+                        <tbody id="recordTableBody"><tr><td colspan="6" class="text-center p-4 text-gray-400">載入中…</td></tr>
+                    </tbody>
+                </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 實時檢測 (COCO-SSD + 細分類模擬) -->
+        <div id="realtimePanel" class="p-5 hidden">
+            <h2 class="text-xl font-bold text-gray-800 border-b pb-2 mb-4">🎥 即時影像與多鳥種 AI 辨識</h2>
+            <div class="bg-black rounded-xl aspect-video flex items-center justify-center relative overflow-hidden">
+                <canvas id="videoCanvas" class="w-full h-full object-contain"></canvas>
+                <div class="absolute bottom-3 left-3 text-white text-xs bg-black/50 px-2 py-1 rounded">🤖 AI 即時偵測 (含細分類)</div>
+            </div>
+            <div class="mt-4 flex justify-center gap-2">
+                <button id="snapshotBtn" class="bg-blue-500 text-white px-4 py-1 rounded text-sm">📸 截圖</button>
+                <button id="resetStatsBtn" class="bg-gray-500 text-white px-4 py-1 rounded text-sm">🔄 重置統計</button>
+            </div>
+            <p class="text-xs text-gray-500 mt-3 text-center">* 基於 COCO-SSD 檢測鳥類位置，並擴充細分類模組 (模擬 40+ 鳥種)。可上傳真實圖片測試。</p>
+        </div>
+
+        <!-- 手動輸入 + JSON 導入 -->
+        <div id="manualPanel" class="p-5 hidden">
+            <h2 class="text-xl font-bold text-gray-800 border-b pb-2 mb-4">✏️ 手動新增 / 批量導入數據 (支援詳細鳥種)</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="font-semibold mb-3">➕ 單筆新增</h3>
+                    <div class="mb-3"><label class="block text-sm font-medium">時間戳 (自動)</label><input type="text" id="manualTime" class="w-full border rounded p-1 text-sm bg-gray-100" readonly></div>
+                    <div class="mb-3"><label class="block text-sm font-medium">檢測數量</label><input type="number" id="manualCount" value="1" min="1" class="w-full border rounded p-1 text-sm"></div>
+                    <div class="mb-3"><label class="block text-sm font-medium">主要鳥種</label><select id="manualSpecies" class="w-full border rounded p-1 text-sm">
+                        <option>珠頸斑鳩</option><option>麻雀</option><option>白頭翁</option><option>綠繡眼</option><option>紅鳩</option><option>八哥</option><option>喜鵲</option><option>樹鵲</option><option>大卷尾</option><option>其他鳥類</option>
+                    </select></div>
+                    <div class="mb-3"><label class="block text-sm font-medium">平均信心 (%)</label><input type="number" id="manualConf" value="85" min="0" max="100" class="w-full border rounded p-1 text-sm"></div>
+                    <button id="addManualRecordBtn" class="bg-purple-600 text-white px-4 py-2 rounded w-full">➕ 新增記錄</button>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="font-semibold mb-3">📂 批量導入 JSON (支援任意鳥種)</h3>
+                    <p class="text-xs text-gray-500 mb-2">格式範例：<br>[{"timestamp":"14:30:25","count":2,"mainSpecies":"珠頸斑鳩","avgConf":0.85}]</p>
+                    <input type="file" id="jsonImportFile" accept=".json" class="hidden">
+                    <label for="jsonImportFile" class="file-input-label w-full text-center block mb-2"><i class="fas fa-upload"></i> 選擇 JSON 檔案</label>
+                    <button id="clearAllDataBtn" class="mt-4 w-full bg-red-400 text-white px-4 py-2 rounded text-sm">🗑️ 清空所有數據</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 數據追蹤地圖 (不變) -->
+        <div id="trackingPanel" class="p-5 hidden">
+            <h2 class="text-xl font-bold text-gray-800 border-b pb-2 mb-4">🗺️ 長效動態監測與導航地圖</h2>
+            <div class="flex flex-col lg:flex-row gap-4">
+                <div class="flex-[2] bg-gray-100 rounded-xl border relative h-96 map-bg overflow-hidden">
+                    <div class="absolute top-[30%] left-[25%] w-24 h-24 bg-red-500/40 rounded-full blur-md animate-pulse-slow"></div>
+                    <div class="absolute top-[35%] left-[28%] w-4 h-4 bg-red-600 rounded-full border-2 border-white shadow-lg z-10"></div>
+                    <span class="absolute top-[32%] left-[32%] text-xs font-bold text-red-800 bg-white/80 px-1 rounded z-10">核心棲地 A</span>
+                    <div class="absolute top-[60%] left-[65%] w-32 h-32 bg-yellow-500/40 rounded-full blur-md animate-pulse-slow" style="animation-delay: 1s;"></div>
+                    <div class="absolute top-[65%] left-[70%] w-4 h-4 bg-yellow-600 rounded-full border-2 border-white shadow-lg z-10"></div>
+                    <span class="absolute top-[68%] left-[68%] text-xs font-bold text-yellow-800 bg-white/80 px-1 rounded z-10">覓食區 B</span>
+                    <svg class="absolute inset-0 w-full h-full pointer-events-none z-0"><path d="M 250 250 Q 400 150 650 450" fill="none" stroke="#8b5cf6" stroke-width="3" stroke-dasharray="8,8" /><path d="M 600 420 L 650 450 L 630 390" fill="none" stroke="#8b5cf6" stroke-width="3" /></svg>
+                </div>
+                <div class="flex-[1] bg-purple-50 rounded-xl p-4 border-l-4 border-purple-500"><h3 class="font-bold flex items-center gap-2">🎯 智能巡查導航規劃</h3><p class="text-xs text-gray-600 mt-1">基於即時熱點與遷徙路徑生成最優路線</p><div class="mt-3 bg-white p-3 rounded text-sm"><div class="flex justify-between"><span>起點: 觀測站 Alpha</span><span>➡️</span><span>終點: 熱點 A 區</span></div><ul class="text-xs text-green-700 mt-2 space-y-1"><li>✓ 預計節省人力時間：<strong>35%</strong></li><li>✓ 沿途高機率觀測點：4 處</li></ul><button class="mt-3 w-full bg-green-500 text-white text-xs py-1.5 rounded">發送至 GPS 設備</button></div></div>
+            </div>
+        </div>
+
+        <!-- 建議生成 (不變) -->
+        <div id="recommendPanel" class="p-5 hidden">
+            <h2 class="text-xl font-bold text-gray-800 border-b pb-2 mb-4">📋 方案優化報告 - 參數設定</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 space-y-5">
+                    <div class="bg-gray-50 p-4 rounded-lg"><h3 class="font-semibold border-l-4 border-purple-500 pl-2 mb-3">💰 資源限制設定</h3><div class="grid grid-cols-2 gap-3"><div><label>總經費 (NT$)</label><input type="number" value="500000" class="w-full border rounded p-1"></div><div><label>人力 (人/月)</label><input type="number" value="15" class="w-full border rounded p-1"></div><div class="col-span-2"><label>實施週期</label><select class="w-full border rounded p-1"><option>3 個月</option><option>6 個月</option></select></div></div></div>
+                    <div class="bg-gray-50 p-4 rounded-lg"><h3 class="font-semibold border-l-4 border-purple-500 pl-2 mb-3">✅ 保育措施清單</h3><div class="space-y-2"><label class="flex items-center gap-2 p-2 bg-white rounded border"><input type="checkbox" checked> A. 無人機巡邏</label><label class="flex items-center gap-2 p-2 bg-white rounded border"><input type="checkbox" checked> B. 核心棲地復育</label><label class="flex items-center gap-2 p-2 bg-white rounded border"><input type="checkbox" checked> C. 邊緣區阻隔設施</label><label class="flex items-center gap-2 p-2 bg-white rounded border"><input type="checkbox"> D. 生態誘餌</label></div></div>
+                    <button id="generateReportBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg w-full">🚀 開始生成 AI 評估報告</button>
+                </div>
+                <div class="bg-gradient-to-br from-purple-50 to-indigo-50 p-4 rounded-xl border border-purple-200"><h3 class="font-bold text-purple-800">✨ AI 智能分析提示</h3><p class="text-sm text-gray-700 mt-2">根據即時檢測數據，近期斑鳩活動集中在核心區，建議優先投入棲地復育。</p><div class="mt-4 text-xs text-gray-500 bg-white/60 p-2 rounded">ⓘ 可手動調整經費與措施重新評估。</div></div>
+            </div>
+            <div id="evalResultArea" class="mt-6 hidden border-t pt-4"><h3 class="font-bold text-lg">📊 評估結果</h3><div class="grid grid-cols-3 gap-3 my-3"><div class="bg-green-50 p-3 text-center rounded"><div class="text-2xl font-bold text-green-600">+18.5%</div><div>存活率提升</div></div><div class="bg-blue-50 p-3 text-center rounded"><div class="text-2xl font-bold text-blue-600">92%</div><div>資源利用率</div></div><div class="bg-purple-50 p-3 text-center rounded"><div class="text-2xl font-bold text-purple-700">$485K</div><div>預估花費</div></div></div><div class="bg-gray-800 text-white p-4 rounded-lg"><span class="font-bold text-purple-300">🤖 AI 決策：</span> 建議將 60% 資源投入核心棲地復育，40% 用於無人機巡查。</div></div>
+        </div>
+    </main>
+</div>
+
+<script>
+    // ---------- 常見鳥種列表 (40+ 種，用於模擬細分類) ----------
+    const birdSpeciesList = [
+        "珠頸斑鳩", "麻雀", "白頭翁", "綠繡眼", "紅鳩", "八哥", "喜鵲", "樹鵲", "大卷尾", "斑文鳥",
+        "白腰文鳥", "褐頭鷦鶯", "灰頭鷦鶯", "小彎嘴", "大彎嘴", "繡眼畫眉", "山紅頭", "頭烏線", "台灣藍鵲", "五色鳥",
+        "翠鳥", "夜鷺", "小白鷺", "黃頭鷺", "蒼鷺", "黑冠麻鷺", "紅冠水雞", "白腹秧雞", "竹雞", "台灣畫眉",
+        "黃尾鴝", "藍磯鶇", "赤腹鶇", "白眉鶇", "灰背鶇", "樹鷚", "赤喉鷚", "黃鶺鴒", "灰鶺鴒", "白鶺鴒"
+    ];
+
+    function getRandomBirdSpecies() {
+        return birdSpeciesList[Math.floor(Math.random() * birdSpeciesList.length)];
+    }
+
+    // 模擬細分類函數 (可被真實模型替換)
+    // 輸入: 圖像區域或特徵 (此處僅用於演示，直接返回隨機鳥種)
+    function simulateDetailedBirdClass(bbox, canvasCtx) {
+        // 實際應用可接入 TensorFlow.js 鳥類分類模型
+        // 此處為示範，從列表隨機選一種
+        return getRandomBirdSpecies();
+    }
+
+    // 核心數據與圖表管理
+    let detectionHistory = [];
+    let cumulativeTotal = 0;
+    let isDetecting = false;
+    let videoStream = null;
+    let model = null;
+    let canvas = document.getElementById('videoCanvas');
+    let ctx = canvas?.getContext('2d');
+
+    let trendChart, confChart, speciesChart, timeChart;
+
+    function initCharts() {
+        const ctxT = document.getElementById('trendChart').getContext('2d');
+        trendChart = new Chart(ctxT, { type: 'line', data: { labels: [], datasets: [{ label: '累計總數', data: [], borderColor: '#3498db', fill: true }, { label: '當前數量', data: [], borderColor: '#e67e22' }] }, options: { responsive: true } });
+        const ctxC = document.getElementById('confidenceChart').getContext('2d');
+        confChart = new Chart(ctxC, { type: 'doughnut', data: { labels: ['高(≥80%)','中(50-80%)','低(<50%)'], datasets: [{ data: [0,0,0], backgroundColor: ['#2ecc71','#f39c12','#e74c3c'] }] }, options: { responsive: true } });
+        const ctxSp = document.getElementById('speciesChart').getContext('2d');
+        speciesChart = new Chart(ctxSp, { type: 'bar', data: { labels: [], datasets: [{ label: '檢測次數', data: [], backgroundColor: '#3498db' }] }, options: { responsive: true, scales: { y: { beginAtZero: true } } } });
+        const ctxTm = document.getElementById('timeChart').getContext('2d');
+        timeChart = new Chart(ctxTm, { type: 'line', data: { labels: ['00-04','04-08','08-12','12-16','16-20','20-24'], datasets: [{ label: '檢測次數', data: [0,0,0,0,0,0], borderColor: '#8b5cf6', fill: true }] }, options: { responsive: true } });
+    }
+
+    function updateSpeciesChart() {
+        // 統計前5種常見鳥種
+        const speciesCount = {};
+        detectionHistory.forEach(rec => {
+            let sp = rec.mainSpecies || (rec.details && rec.details[0]?.class) || "未知";
+            speciesCount[sp] = (speciesCount[sp] || 0) + rec.count;
+        });
+        const sorted = Object.entries(speciesCount).sort((a,b) => b[1] - a[1]).slice(0,5);
+        speciesChart.data.labels = sorted.map(s => s[0]);
+        speciesChart.data.datasets[0].data = sorted.map(s => s[1]);
+        speciesChart.update();
+    }
+
+    function updateAllChartsAndTable() {
+        if (!detectionHistory.length) {
+            trendChart.data.labels = []; trendChart.data.datasets[0].data = []; trendChart.data.datasets[1].data = []; trendChart.update();
+            confChart.data.datasets[0].data = [0,0,0]; confChart.update();
+            speciesChart.data.labels = []; speciesChart.data.datasets[0].data = []; speciesChart.update();
+            timeChart.data.datasets[0].data = [0,0,0,0,0,0]; timeChart.update();
+            document.getElementById('recordTableBody').innerHTML = '<tr><td colspan="6" class="text-center p-4 text-gray-400">暫無記錄</td></tr>';
+            document.getElementById('statTotal').innerText = '0';
+            document.getElementById('statCurrent').innerText = '0';
+            document.getElementById('statConf').innerText = '0%';
+            return;
+        }
+        const last20 = detectionHistory.slice(-20);
+        trendChart.data.labels = last20.map(r=>r.timestamp);
+        trendChart.data.datasets[0].data = last20.map(r=>r.total);
+        trendChart.data.datasets[1].data = last20.map(r=>r.count);
+        trendChart.update();
+
+        let high=0, mid=0, low=0, hourly=[0,0,0,0,0,0];
+        detectionHistory.forEach(rec => {
+            let confVal = rec.avgConf || (rec.details ? rec.details.reduce((a,b)=>a+b.confidence,0)/rec.details.length : 0.7);
+            if(confVal>=0.8) high+=rec.count; else if(confVal>=0.5) mid+=rec.count; else low+=rec.count;
+            let hour = parseInt(rec.timestamp.split(':')[0]) || 0;
+            let idx = hour<4?0:(hour<8?1:(hour<12?2:(hour<16?3:(hour<20?4:5))));
+            hourly[idx] += rec.count;
+        });
+        confChart.data.datasets[0].data = [high,mid,low]; confChart.update();
+        timeChart.data.datasets[0].data = hourly; timeChart.update();
+        updateSpeciesChart();
+
+        const tbody = document.getElementById('recordTableBody');
+        const recent = [...detectionHistory].reverse().slice(0, 15);
+        tbody.innerHTML = recent.map((r,idx) => {
+            let mainSp = r.mainSpecies || (r.details ? r.details[0]?.class : '未知');
+            let avgConf = r.avgConf ? (r.avgConf*100).toFixed(0) : (r.details ? (r.details.reduce((a,b)=>a+b.confidence,0)/r.details.length*100).toFixed(0) : '70');
+            let reverseIndex = detectionHistory.length - 1 - idx;
+            return `<tr><td class="p-2">${r.timestamp}</td><td>${r.count}</td><td><span class="px-1 bg-purple-100 rounded">${mainSp}</span></td><td>${r.total}</td><td>${avgConf}%</td><td><button onclick="deleteRecord(${reverseIndex})" class="text-red-500 text-xs">刪除</button></td></tr>`;
+        }).join('');
+
+        document.getElementById('statTotal').innerText = detectionHistory[detectionHistory.length-1].total;
+        document.getElementById('statCurrent').innerText = detectionHistory[detectionHistory.length-1].count;
+        let avgAll = detectionHistory.reduce((s,r)=>s+(r.avgConf || (r.details?r.details.reduce((a,b)=>a+b.confidence,0)/r.details.length:0.7)),0)/(detectionHistory.length||1);
+        document.getElementById('statConf').innerText = (avgAll*100).toFixed(0)+'%';
+    }
+
+    function addRecord(record) {
+        cumulativeTotal += record.count;
+        record.total = cumulativeTotal;
+        if(!record.timestamp) record.timestamp = new Date().toLocaleTimeString();
+        detectionHistory.push(record);
+        if(detectionHistory.length > 500) detectionHistory.shift();
+        updateAllChartsAndTable();
+        saveToLocal();
+    }
+
+    function addMultipleRecords(recordsArray) {
+        if(!Array.isArray(recordsArray)) throw new Error('數據必須為陣列');
+        for(let rec of recordsArray) {
+            cumulativeTotal += rec.count;
+            rec.total = cumulativeTotal;
+            if(!rec.timestamp) rec.timestamp = new Date().toLocaleTimeString();
+            detectionHistory.push(rec);
+        }
+        if(detectionHistory.length > 500) detectionHistory = detectionHistory.slice(-500);
+        updateAllChartsAndTable();
+        saveToLocal();
+    }
+
+    window.deleteRecord = function(index) {
+        if(index>=0 && index<detectionHistory.length) {
+            detectionHistory.splice(index,1);
+            cumulativeTotal = 0;
+            detectionHistory.forEach(r => { cumulativeTotal += r.count; r.total = cumulativeTotal; });
+            updateAllChartsAndTable();
+            saveToLocal();
+        }
+    };
+
+    function saveToLocal() { localStorage.setItem('doveHistory', JSON.stringify(detectionHistory)); localStorage.setItem('cumulativeTotal', cumulativeTotal); }
+    function loadFromLocal() {
+        let saved = localStorage.getItem('doveHistory');
+        if(saved) { detectionHistory = JSON.parse(saved); cumulativeTotal = detectionHistory.length ? detectionHistory[detectionHistory.length-1].total : 0; updateAllChartsAndTable(); }
+        else { generateDemoData(); }
+    }
+    function generateDemoData() {
+        cumulativeTotal = 0;
+        detectionHistory = [];
+        for(let i=0;i<20;i++) {
+            let cnt = Math.floor(Math.random()*4)+1;
+            cumulativeTotal += cnt;
+            let birdName = birdSpeciesList[Math.floor(Math.random() * birdSpeciesList.length)];
+            detectionHistory.push({
+                timestamp: new Date(Date.now()-(20-i)*5*60000).toLocaleTimeString(),
+                count: cnt,
+                total: cumulativeTotal,
+                mainSpecies: birdName,
+                avgConf: 0.7 + Math.random()*0.25
+            });
+        }
+        updateAllChartsAndTable();
+    }
+    function clearAllData() { if(confirm('確定清空所有數據？')){ detectionHistory=[]; cumulativeTotal=0; updateAllChartsAndTable(); saveToLocal(); } }
+
+    // JSON 導入
+    document.getElementById('jsonImportFile').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            try {
+                const imported = JSON.parse(ev.target.result);
+                if(Array.isArray(imported)) {
+                    addMultipleRecords(imported);
+                    alert(`成功導入 ${imported.length} 筆記錄`);
+                } else alert('JSON 格式錯誤：需要陣列');
+            } catch(err) { alert('解析 JSON 失敗：'+err.message); }
+            document.getElementById('jsonImportFile').value = '';
+        };
+        reader.readAsText(file);
+    });
+
+    document.getElementById('exportJsonBtn').addEventListener('click', () => {
+        let dataStr = JSON.stringify(detectionHistory, null, 2);
+        let blob = new Blob([dataStr], {type: 'application/json'});
+        let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `detection_${Date.now()}.json`; a.click();
+    });
+    document.getElementById('exportCsvBtn').addEventListener('click',()=>{
+        let csvRows = [['時間','數量','主要鳥種','累計總數','平均信心']];
+        detectionHistory.forEach(r=>{
+            let main = r.mainSpecies || (r.details?r.details[0].class:'未知');
+            let avg = r.avgConf ? (r.avgConf*100).toFixed(1) : (r.details?(r.details.reduce((a,b)=>a+b.confidence,0)/r.details.length*100).toFixed(1):'70');
+            csvRows.push([r.timestamp, r.count, main, r.total, avg+'%']);
+        });
+        let csv = csvRows.map(row=>row.join(',')).join('\n');
+        let blob = new Blob(["\uFEFF" + csv], {type: 'text/csv'});
+        let a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`detection_${Date.now()}.csv`; a.click();
+    });
+
+    // AI 檢測 (整合細分類)
+    async function loadModel() { if(!model) model = await cocoSsd.load(); return model; }
+    async function startCameraDetection() {
+        if(isDetecting) return;
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            videoStream = stream;
+            const video = document.createElement('video');
+            video.srcObject = stream;
+            video.playsInline = true;
+            await video.play();
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            isDetecting = true;
+            await loadModel();
+            function detectFrame() {
+                if(!isDetecting || !video) return;
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                model.detect(video).then(predictions => {
+                    const birds = predictions.filter(p => p.class.toLowerCase().includes('bird'));
+                    if(birds.length > 0) {
+                        // 為每一隻鳥取得細分類 (此處簡化為整批同一種)
+                        let sampleBird = simulateDetailedBirdClass(birds[0].bbox, ctx);
+                        let details = birds.map(b => ({ class: sampleBird, confidence: b.score }));
+                        addRecord({
+                            timestamp: new Date().toLocaleTimeString(),
+                            count: birds.length,
+                            details: details,
+                            mainSpecies: sampleBird,
+                            avgConf: birds.reduce((s,b)=>s+b.score,0)/birds.length
+                        });
+                        // 繪製邊框及細分類標籤
+                        birds.forEach(b => {
+                            const [x,y,w,h] = b.bbox;
+                            ctx.strokeStyle = '#2ecc71'; ctx.lineWidth=2; ctx.strokeRect(x,y,w,h);
+                            ctx.fillStyle='#2ecc71';
+                            ctx.fillText(`${sampleBird} ${(b.score*100).toFixed(0)}%`, x, y-5);
+                        });
+                    }
+                    requestAnimationFrame(detectFrame);
+                }).catch(e=>{ requestAnimationFrame(detectFrame); });
+            }
+            detectFrame();
+        } catch(e) { alert('攝像頭錯誤: '+e.message); }
+    }
+    function stopCameraDetection() { isDetecting=false; if(videoStream) videoStream.getTracks().forEach(t=>t.stop()); }
+    function takeSnapshot() { if(canvas){ let a=document.createElement('a'); a.href=canvas.toDataURL(); a.download=`snapshot_${Date.now()}.png`; a.click(); } }
+
+    // 手動新增
+    document.getElementById('addManualRecordBtn').addEventListener('click',()=>{
+        let count = parseInt(document.getElementById('manualCount').value) || 1;
+        let species = document.getElementById('manualSpecies').value;
+        let conf = parseFloat(document.getElementById('manualConf').value)/100;
+        addRecord({ timestamp: new Date().toLocaleTimeString(), count: count, mainSpecies: species, avgConf: conf });
+    });
+    document.getElementById('manualTime').value = new Date().toLocaleTimeString();
+    setInterval(()=>{ document.getElementById('manualTime').value = new Date().toLocaleTimeString(); }, 1000);
+
+    // 圖片上傳檢測 + 細分類
+    document.getElementById('uploadImage').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if(!file) return;
+        const img = new Image();
+        img.onload = async () => {
+            canvas.width = img.width; canvas.height = img.height;
+            ctx.drawImage(img,0,0,img.width,img.height);
+            await loadModel();
+            const pred = await model.detect(img);
+            const birds = pred.filter(p => p.class.toLowerCase().includes('bird'));
+            if(birds.length) {
+                let sampleBird = simulateDetailedBirdClass(birds[0].bbox, ctx);
+                let details = birds.map(b => ({ class: sampleBird, confidence: b.score }));
+                addRecord({ timestamp: new Date().toLocaleTimeString(), count: birds.length, details: details, mainSpecies: sampleBird, avgConf: birds.reduce((s,b)=>s+b.score,0)/birds.length });
+                alert(`檢測到 ${birds.length} 隻 ${sampleBird}，已加入紀錄`);
+            } else alert('未檢測到鳥類');
+            document.getElementById('uploadPreview').innerHTML = `<img src="${URL.createObjectURL(file)}" class="h-16 rounded mt-1">`;
+        };
+        img.src = URL.createObjectURL(file);
+    });
+
+    // 按鈕綁定
+    document.getElementById('startDetectBtn').onclick = startCameraDetection;
+    document.getElementById('stopDetectBtn').onclick = stopCameraDetection;
+    document.getElementById('pauseDetectBtn').onclick = () => { isDetecting = !isDetecting; alert(isDetecting?'已恢復':'已暫停'); };
+    document.getElementById('snapshotBtn').onclick = takeSnapshot;
+    document.getElementById('resetStatsBtn').onclick = () => { if(confirm('重置所有數據?')){ detectionHistory=[]; cumulativeTotal=0; updateAllChartsAndTable(); saveToLocal(); } };
+    document.getElementById('clearAllDataBtn').onclick = clearAllData;
+    document.getElementById('generateReportBtn').onclick = () => document.getElementById('evalResultArea').classList.remove('hidden');
+
+    // 頁籤切換
+    const tabs = document.querySelectorAll('[data-tab]');
+    const panels = { dashboard:'dashboardPanel', realtime:'realtimePanel', manual:'manualPanel', tracking:'trackingPanel', recommend:'recommendPanel' };
+    tabs.forEach(btn=>{
+        btn.addEventListener('click',(e)=>{
+            e.preventDefault();
+            const tab = btn.getAttribute('data-tab');
+            Object.values(panels).forEach(pid=>{ let el=document.getElementById(pid); if(el) el.classList.add('hidden'); });
+            document.getElementById(panels[tab]).classList.remove('hidden');
+            tabs.forEach(b=>b.classList.remove('brand-bg')); btn.classList.add('brand-bg');
+            if(tab==='realtime' && canvas) { if(ctx) ctx.fillStyle='#2c3e50'; ctx?.fillRect(0,0,canvas.width,canvas.height); }
+        });
+    });
+
+    initCharts();
+    loadFromLocal();
+    setInterval(()=>{ document.getElementById('cpu-load').innerText = Math.floor(Math.random()*30+20); document.getElementById('ram-load').innerText = Math.floor(Math.random()*40+30); }, 3000);
+</script>
+</body>
+</html>
