@@ -784,6 +784,16 @@
             }
         }
 
+        // 建立一個安全更改文字的專用函式
+        function safeSetText(id, text) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = text;
+            } else {
+                console.warn(`警告：找不到 ID 為 "${id}" 的元素，已自動跳過。`);
+            }
+        }
+
         function forceRandomGeneration(sourceLabel) {
             showCustomWarning("發現神秘未知鳥類！已為您隨機抽取合適的卡牌樣板。");
             
